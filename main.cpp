@@ -65,7 +65,7 @@ void printProgramMenu() {
     std::cout << "\nPlease enter your choice\n\n0. Add a city\n1. Modify a city\n2. Delete a city\n3. Find distance between cities\n4. Display all cities\n5. Exit\n\n";
 }
 
-/* Function that reads the menu choice from standard input and returns it to the callee */
+/* Function that reads the menu choice from standard input and returns it to the caller */
 int getProgramMenuChoice() {
     int choice = 0;
     std::cin >> choice;
