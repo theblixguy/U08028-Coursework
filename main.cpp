@@ -11,6 +11,8 @@
 
 /* Imports we need */
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <memory>
 #include <vector>
 #include <array>
@@ -22,19 +24,22 @@
 #define build_time __TIME__
 #define build_date __DATE__
 
-/* Macros to store console text color codes */
+/* Macros to store ANSI escape codes for text customization */
 #define CLR_NORMAL  "\x1B[0m"
 #define CLR_RED     "\x1B[31m"
 #define CLR_YELLOW  "\x1B[33m"
 #define CLR_GREEN   "\x1B[32m"
+#define CLR_CYAN    "\x1B[36m"
+#define BOLD_ON     "\x1B[1m"
+#define BOLD_OFF    "\x1B[21m"
 
 /* Vector of unique_ptr's pointing to our custom City class objects */
-std::vector<std::unique_ptr<City>> coords;
+std::vector<std::unique_ptr<City>> cities;
 
 /* Function signatures */
 void printProgramIntro();
 void printProgramMenu();
-void sortCoords();
+void sortCities();
 void addCity();
 auto cityExists();
 void displayAllCities();
@@ -43,10 +48,13 @@ void modifyCity();
 void deleteCity();
 void findDistCities();
 void exitProgram();
+void loadCitiesData();
+void saveCitiesData();
 int getProgramMenuChoice();
 
 /* Duh */
 int main() {
+    loadCitiesData();
     printProgramIntro();
     printProgramMenu();
     handleMenuChoice();
@@ -55,9 +63,9 @@ int main() {
 
 /* Function to print some introduction text (program name, author name, compile date/time, etc) */
 void printProgramIntro() {
-    std::cout << CLR_YELLOW << "------------------------------------------------------------" << std::endl;
-    std::cout << "Cities program (U08028 Coursework) by Suyash Srijan" << std::endl;
-    std::cout << "Compiled on: " << build_date << " / " << build_time << std::endl;
+    std::cout << CLR_CYAN << "------------------------------------------------------------" << std::endl;
+    std::cout << BOLD_ON << "Cities program (U08028 Coursework) by Suyash Srijan" << std::endl;
+    std::cout << "Compiled on: " << build_date << " / " << build_time << BOLD_OFF << std::endl;
     std::cout << "------------------------------------------------------------" << CLR_NORMAL << std::endl;
 }
 
@@ -75,20 +83,60 @@ int getProgramMenuChoice() {
 }
 
 /* Function to sort our vector in ascending order (A-Z) */
-void sortCoords() {
-    std::sort(coords.begin(), coords.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
+void sortCities() {
+    std::sort(cities.begin(), cities.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
         return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
     });
 }
 
-/* Function that reads the city name and coordinates from standard input and creates a new Coordinate unique_ptr in our vector */
+/* Function that loads data for cities from the disk into the vector */
+void loadCitiesData() {
+    std::ifstream data_file("cities_data.txt");
+
+    if (!data_file.good()) {
+        std::cout << CLR_YELLOW << BOLD_ON << "Warn: Database file missing or bad, a new one has been created\n" << BOLD_OFF << CLR_NORMAL << std::endl;
+        std::ofstream outfile ("cities_data.txt");
+        outfile.close();
+        return;
+    }
+    std::string line;
+
+    while (getline(data_file, line)) {
+    if (line.empty()) continue;
+    std::vector<std::string> tokens = split_line(',', line);
+    cities.push_back(std::make_unique<City>(stod(tokens.at(2)), stod(tokens.at(3)), tokens.at(0), tokens.at(1)));
+  }
+
+  data_file.close();
+}
+
+/* Function that saves data for cities from the vector to disk */ 
+void saveCitiesData() {
+    std::ofstream data_file("cities_data.txt");
+
+    if (cities.empty()) return;
+
+    sortCities();
+
+    for (auto&& item : cities) {
+        std::string line = item->getCity() + "," + item->getCityCountry() + "," + std::to_string(item->getLatitude()) + "," + std::to_string(item->getLongitude()) + "\n";
+        data_file << line;
+    }
+
+    data_file.close();
+
+}
+
+/* Function that reads the city name and coordinates from standard input and creates a new City unique_ptr in our vector */
 void addCity() {
     std::string city_name;
     std::string city_country;
     double latitude;
     double longitude;
+
     std::cout << "Enter the name of the city: " << std::endl;
     std::getline(std::cin, city_name);
+
     while (!isAlphaString(city_name))
     {
         std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
@@ -97,6 +145,7 @@ void addCity() {
     }
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country);
+
     while (!isAlphaString(city_country))
     {
         std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
@@ -109,21 +158,21 @@ void addCity() {
     std::cout << "Enter the longitude of the city: " << std::endl;
     std::cin >> longitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    coords.push_back(std::make_unique<City>(latitude, longitude, city_name, city_country));
+    cities.push_back(std::make_unique<City>(latitude, longitude, city_name, city_country));
     std::cout << CLR_GREEN << "City added!" << CLR_NORMAL << std::endl;
 
     printProgramMenu();
     handleMenuChoice();
 }
 
-/* Function that finds a city and returns an iterator to it, If no such city is found, then the function returns coords.end() */
+/* Function that finds a city and returns an iterator to it, If no such city is found, then the function returns cities.end() */
 auto cityExists(std::string city, std::string country) {
-    auto it = std::find_if(coords.begin(), coords.end(), [city, country](const std::unique_ptr<City>& city1)
+    auto it = std::find_if(cities.begin(), cities.end(), [city, country](const std::unique_ptr<City>& city1)
     { return (city1->getCity().compare(city) == 0) && (city1->getCityCountry().compare(country) == 0); });
     return it;
 }
 
-/* Function that reads the city name from standard input and lets the user change its coords if the city exists in our vector
+/* Function that reads the city name from standard input and lets the user change its coordinates if the city exists in our vector
 *  TODO: Let user look up a place by its coordinates instead of just city name
 */
 void modifyCity() {
@@ -161,7 +210,7 @@ void modifyCity() {
 
     auto city = cityExists(city_name, city_country);
     
-    if (city != coords.end()) {
+    if (city != cities.end()) {
         (*city)->setCity(latitude, longitude, city_name, city_country);
         std::cout << CLR_GREEN << "City modified!" << CLR_NORMAL << std::endl;
     } else {
@@ -201,9 +250,9 @@ void deleteCity() {
 
     auto city = cityExists(city_name, city_country);
 
-    if (city != coords.end()) {
-        swap(*city, coords.back());
-        coords.pop_back();
+    if (city != cities.end()) {
+        swap(*city, cities.back());
+        cities.pop_back();
         std::cout << CLR_GREEN << "City deleted!" << CLR_NORMAL << std::endl;
     } else {
         std::cout << CLR_RED << "City not found!" << CLR_NORMAL << std::endl;
@@ -215,9 +264,9 @@ void deleteCity() {
 
 /* Function that prints all the cities and its coordinates that are in our vector */
 void displayAllCities() {
-    sortCoords();
+    sortCities();
 
-    for (auto&& item : coords) {
+    for (auto&& item : cities) {
         std::cout << "City name: " << item->getCity() << " | City country: " << item->getCityCountry() << " | City Latitude: " << item->getLatitude() << " | City Longitude: " << item->getLongitude() << std::endl;
     }
 
@@ -225,7 +274,7 @@ void displayAllCities() {
     handleMenuChoice();
 }
 
-/* Function that finds the distance in kilometers between two Coordinates */
+/* Function that finds the distance in kilometers between two Cities */
 void findDistCities() {
     std::string city_1;
     std::string city_country_1;
@@ -275,7 +324,7 @@ void findDistCities() {
     auto city1 = cityExists(city_1, city_country_1);
     auto city2 = cityExists(city_2, city_country_2);
 
-    if (city1 != coords.end() && city2 != coords.end()) {
+    if (city1 != cities.end() && city2 != cities.end()) {
         double dist = (*city1)->getDistanceTo(*city2);
         std::cout << CLR_GREEN << "Distance between the cities: " << dist << " kilometers" << CLR_NORMAL << std::endl;
     } else {
@@ -286,11 +335,12 @@ void findDistCities() {
     handleMenuChoice();
 }
 
-/* Function that clears our vectors and prints a goodbye message 
+/* Function that saves the data, clears the vector and prints a goodbye message 
 *  Exit is automatically handled as the control returns to main() which just calls return 0 and exits our program
 */
 void exitProgram() {
-    coords.clear();
+    saveCitiesData();
+    cities.clear();
     std::cout << CLR_GREEN << "Goodbye!" << CLR_NORMAL << std::endl;
 }
 
@@ -300,7 +350,15 @@ void exitProgram() {
 */
 void handleMenuChoice() {
     int choice = getProgramMenuChoice();
+
     std::array<std::function<void()>,6> funcs = {addCity, modifyCity, deleteCity, findDistCities, displayAllCities, exitProgram};
+
     clear_screen();
-    funcs[choice]();
+
+    if (choice >= 6) {
+        std::cout << CLR_RED << "Invalid menu option, please choose a correct one" << CLR_NORMAL << std::endl;
+        handleMenuChoice();
+    } else {
+        funcs[choice]();
+    }
 }

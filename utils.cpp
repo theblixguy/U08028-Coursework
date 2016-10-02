@@ -62,3 +62,16 @@ double calc_distance_cities(double latitude, double longitude, std::unique_ptr<C
 bool isAlphaString(std::string str) {
 	return std::regex_match(str, std::regex("^[A-Za-z]+$"));
 }
+
+/* Tokenize a comma separated string and return it in a vector */
+std::vector<std::string> split_line(char separator, const std::string &line) {
+  std::vector<std::string> tokens;
+  std::string::size_type begin = 0;
+  std::string::size_type end = 0;
+  while ((end = line.find(separator, begin)) != std::string::npos) {
+    tokens.push_back(line.substr(begin, end - begin));
+    begin = end + 1;
+  }
+  tokens.push_back(line.substr(begin));
+  return tokens;
+}
