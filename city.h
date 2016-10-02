@@ -13,7 +13,7 @@
  
 class City
 {
-private:
+public:
     double city_longitude;
     double city_latitude;
     std::string city_name;
