@@ -11,6 +11,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <regex>
 #include "city.h"
 
 /* Need to define this macro to access the macro definitions for common math constants */
@@ -45,6 +46,7 @@ double calc_distance_cities(std::unique_ptr<City> &city1, std::unique_ptr<City> 
 	return 2.0 * EARTH_RADIUS_KM * asin(sqrt(x * x + cos(lat1_rad) * cos(lat2_rad) * y * y));
 }
 
+/* Same as above, but accepts coords of one City directly */
 double calc_distance_cities(double latitude, double longitude, std::unique_ptr<City> &target_city) {
 	double lat1_rad, lon1_rad, lat2_rad, lon2_rad, x, y;
 	lat1_rad = degree_to_radian(latitude);
@@ -54,4 +56,9 @@ double calc_distance_cities(double latitude, double longitude, std::unique_ptr<C
 	x = sin((lat2_rad - lat1_rad) / 2);
 	y = sin((lon2_rad - lon1_rad) / 2);
 	return 2.0 * EARTH_RADIUS_KM * asin(sqrt(x * x + cos(lat1_rad) * cos(lat2_rad) * y * y));
+}
+
+/* Function to check if a string is comprised of only alphabets */
+bool isAlphaString(std::string str) {
+	return std::regex_match(str, std::regex("^[A-Za-z]+$"));
 }

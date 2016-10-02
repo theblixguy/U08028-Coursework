@@ -77,7 +77,7 @@ int getProgramMenuChoice() {
 /* Function to sort our vector in ascending order (A-Z) */
 void sortCoords() {
     std::sort(coords.begin(), coords.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
-        return city1->getCity() < city2->getCity(); 
+        return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
     });
 }
 
@@ -89,10 +89,20 @@ void addCity() {
     double longitude;
     std::cout << "Enter the name of the city: " << std::endl;
     std::getline(std::cin, city_name);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    while (!isAlphaString(city_name))
+    {
+        std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
+        std::cin.clear();
+        std::getline(std::cin, city_name);
+    }
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    while (!isAlphaString(city_country))
+    {
+        std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
+        std::cin.clear();
+        std::getline(std::cin, city_country);
+    }
     std::cout << "Enter the latitude of the city: " << std::endl;
     std::cin >> latitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -121,11 +131,27 @@ void modifyCity() {
     std::string city_country;
     double latitude;
     double longitude;
+
     std::cout << "Enter the name of the city to modify: " << std::endl;
     std::getline(std::cin, city_name);
+
+    while (!isAlphaString(city_name))
+    {
+        std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
+        std::cin.clear();
+        std::getline(std::cin, city_name);
+    }
+
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (!isAlphaString(city_country))
+    {
+        std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
+        std::cin.clear();
+        std::getline(std::cin, city_country);
+    }
+
     std::cout << "Enter the new latitude of the city: " << std::endl;
     std::cin >> latitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -152,12 +178,26 @@ void modifyCity() {
 void deleteCity() {
     std::string city_name;
     std::string city_country;
+
     std::cout << "Enter the name of the city to delete: " << std::endl;
     std::getline(std::cin, city_name);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (!isAlphaString(city_name))
+    {
+        std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
+        std::cin.clear();
+        std::getline(std::cin, city_name);
+    }
+
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (!isAlphaString(city_country))
+    {
+        std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
+        std::cin.clear();
+        std::getline(std::cin, city_country);
+    }
 
     auto city = cityExists(city_name, city_country);
 
@@ -191,18 +231,46 @@ void findDistCities() {
     std::string city_country_1;
     std::string city_2;
     std::string city_country_2;
+
     std::cout << "Enter the name of the first city: " << std::endl;
     std::getline(std::cin, city_1);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (!isAlphaString(city_1))
+    {
+        std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
+        std::cin.clear();
+        std::getline(std::cin, city_1);
+    }
+
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country_1);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (!isAlphaString(city_country_1))
+    {
+        std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
+        std::cin.clear();
+        std::getline(std::cin, city_1);
+    }
+
     std::cout << "Enter the name of the second city: " << std::endl;
     std::getline(std::cin, city_2);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (!isAlphaString(city_2))
+    {
+        std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
+        std::cin.clear();
+        std::getline(std::cin, city_2);
+    }
+
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country_2);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (!isAlphaString(city_country_2))
+    {
+        std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
+        std::cin.clear();
+        std::getline(std::cin, city_country_2);
+    }
 
     auto city1 = cityExists(city_1, city_country_1);
     auto city2 = cityExists(city_2, city_country_2);
