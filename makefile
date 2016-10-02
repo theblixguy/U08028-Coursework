@@ -9,9 +9,9 @@ CXXFLAGS= -c -Wall -Wextra -std=c++14
 
 all: cities
 
-cities: main.o coordinate.o utils.o
+cities: main.o city.o utils.o
 	@echo	"Linking object files and generating executable..."
-	$(CXX) main.o coordinate.o utils.o -o cities
+	$(CXX) main.o city.o utils.o -o cities
 	@echo	"Done!"
 
 main.o: main.cpp
@@ -20,9 +20,9 @@ main.o: main.cpp
 	$(CXX) $(CXXFLAGS) main.cpp
 	@echo 	"Done!"
 
-coordinate.o: coordinate.cpp coordinate.h
-	@echo	"Compiling coordinate.cpp..."
-	$(CXX) $(CXXFLAGS) coordinate.cpp
+city.o: city.cpp city.h
+	@echo	"Compiling city.cpp..."
+	$(CXX) $(CXXFLAGS) city.cpp
 	@echo	"Done!"
 
 utils.o: utils.cpp utils.h

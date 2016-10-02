@@ -4,7 +4,7 @@
 * Written by: Suyash Srijan
 * Student number: 14076594
 *
-* This code uses some C++ 11 and C++ 14 features like std::make_unique, std::function, and lambdas 
+* This code uses some C++ 11 and C++ 14 features like auto, std::make_unique, std::function, and lambdas 
 * so please don't forget to add -std=c++14 to g++ when compiling!
 *
 */
@@ -15,7 +15,7 @@
 #include <vector>
 #include <array>
 #include <functional>
-#include "coordinate.h"
+#include "city.h"
 #include "utils.h"
 
 /* Macros to store the date/time to show the compilation date/time in program */
@@ -28,14 +28,15 @@
 #define CLR_YELLOW  "\x1B[33m"
 #define CLR_GREEN   "\x1B[32m"
 
-/* STL vector of unique_ptr's pointing to our custom Coordinate class objects */
-std::vector<std::unique_ptr<Coordinate>> coords;
+/* STL vector of unique_ptr's pointing to our custom City class objects */
+std::vector<std::unique_ptr<City>> coords;
 
 /* Function signatures */
 void printProgramIntro();
 void printProgramMenu();
 void sortCoords();
 void addCity();
+auto cityExists();
 void displayAllCities();
 void handleMenuChoice();
 void modifyCity();
@@ -73,20 +74,24 @@ int getProgramMenuChoice() {
     return choice;
 }
 
-/* Function to sort our STL vector in ascending order (A-Z) */
+/* Function to sort our vector in ascending order (A-Z) */
 void sortCoords() {
-    std::sort(coords.begin(), coords.end(), [](const std::unique_ptr<Coordinate>& coord1, const std::unique_ptr<Coordinate>& coord2) {
-        return coord1->getCity() < coord2->getCity(); 
+    std::sort(coords.begin(), coords.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
+        return city1->getCity() < city2->getCity(); 
     });
 }
 
 /* Function that reads the city name and coordinates from standard input and creates a new Coordinate unique_ptr in our vector */
 void addCity() {
     std::string city_name;
+    std::string city_country;
     double latitude;
     double longitude;
     std::cout << "Enter the name of the city: " << std::endl;
-    std::cin >> city_name;
+    std::getline(std::cin, city_name);
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Enter the name of the country the city is located in: " << std::endl;
+    std::getline(std::cin, city_country);
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cout << "Enter the latitude of the city: " << std::endl;
     std::cin >> latitude;
@@ -94,11 +99,18 @@ void addCity() {
     std::cout << "Enter the longitude of the city: " << std::endl;
     std::cin >> longitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    coords.push_back(std::make_unique<Coordinate>(latitude, longitude, city_name));
+    coords.push_back(std::make_unique<City>(latitude, longitude, city_name, city_country));
     std::cout << CLR_GREEN << "City added!" << CLR_NORMAL << std::endl;
 
     printProgramMenu();
     handleMenuChoice();
+}
+
+/* Function that finds a city and returns an iterator to it, If no such city is found, then the function returns coords.end() */
+auto cityExists(std::string city, std::string country) {
+    auto it = std::find_if(coords.begin(), coords.end(), [city, country](const std::unique_ptr<City>& city1)
+    { return (city1->getCity().compare(city) == 0) && (city1->getCityCountry().compare(country) == 0); });
+    return it;
 }
 
 /* Function that reads the city name from standard input and lets the user change its coords if the city exists in our vector
@@ -106,10 +118,13 @@ void addCity() {
 */
 void modifyCity() {
     std::string city_name;
+    std::string city_country;
     double latitude;
     double longitude;
     std::cout << "Enter the name of the city to modify: " << std::endl;
-    std::cin >> city_name;
+    std::getline(std::cin, city_name);
+    std::cout << "Enter the name of the country the city is located in: " << std::endl;
+    std::getline(std::cin, city_country);
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cout << "Enter the new latitude of the city: " << std::endl;
     std::cin >> latitude;
@@ -118,10 +133,10 @@ void modifyCity() {
     std::cin >> longitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    auto it = std::find_if(coords.begin(), coords.end(), [city_name](const std::unique_ptr<Coordinate>& coord)
-    { return (coord->getCity().compare(city_name) == 0); });
-    if (it != coords.end()) {
-        (*it)->setCoordinate(latitude, longitude, city_name);
+    auto city = cityExists(city_name, city_country);
+    
+    if (city != coords.end()) {
+        (*city)->setCity(latitude, longitude, city_name, city_country);
         std::cout << CLR_GREEN << "City modified!" << CLR_NORMAL << std::endl;
     } else {
         std::cout << CLR_RED << "City not found!" << CLR_NORMAL << std::endl;
@@ -136,13 +151,18 @@ void modifyCity() {
 */
 void deleteCity() {
     std::string city_name;
+    std::string city_country;
     std::cout << "Enter the name of the city to delete: " << std::endl;
-    std::cin >> city_name;
+    std::getline(std::cin, city_name);
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    auto it = std::find_if(coords.begin(), coords.end(), [city_name](const std::unique_ptr<Coordinate>& coord)
-    { return (coord->getCity().compare(city_name) == 0); });
-    if (it != coords.end()) {
-        swap(*it, coords.back());
+    std::cout << "Enter the name of the country the city is located in: " << std::endl;
+    std::getline(std::cin, city_country);
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    auto city = cityExists(city_name, city_country);
+
+    if (city != coords.end()) {
+        swap(*city, coords.back());
         coords.pop_back();
         std::cout << CLR_GREEN << "City deleted!" << CLR_NORMAL << std::endl;
     } else {
@@ -158,7 +178,7 @@ void displayAllCities() {
     sortCoords();
 
     for (auto&& item : coords) {
-        std::cout << "City name: " << item->getCity() << " | City Latitude: " << item->getLatitude() << " | City Longitude: " << item->getLongitude() << std::endl;
+        std::cout << "City name: " << item->getCity() << " | City country: " << item->getCityCountry() << " | City Latitude: " << item->getLatitude() << " | City Longitude: " << item->getLongitude() << std::endl;
     }
 
     printProgramMenu();
@@ -168,22 +188,27 @@ void displayAllCities() {
 /* Function that finds the distance in kilometers between two Coordinates */
 void findDistCities() {
     std::string city_1;
+    std::string city_country_1;
     std::string city_2;
+    std::string city_country_2;
     std::cout << "Enter the name of the first city: " << std::endl;
-    std::cin >> city_1;
+    std::getline(std::cin, city_1);
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Enter the name of the country the city is located in: " << std::endl;
+    std::getline(std::cin, city_country_1);
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cout << "Enter the name of the second city: " << std::endl;
-    std::cin >> city_2;
+    std::getline(std::cin, city_2);
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Enter the name of the country the city is located in: " << std::endl;
+    std::getline(std::cin, city_country_2);
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    auto coord_1 = std::find_if(coords.begin(), coords.end(), [city_1](const std::unique_ptr<Coordinate>& coord)
-    { return (coord->getCity().compare(city_1) == 0); });
+    auto city1 = cityExists(city_1, city_country_1);
+    auto city2 = cityExists(city_2, city_country_2);
 
-    auto coord_2 = std::find_if(coords.begin(), coords.end(), [city_2](const std::unique_ptr<Coordinate>& coord)
-    { return (coord->getCity().compare(city_2) == 0); });
-
-    if (coord_1 != coords.end() && coord_2 != coords.end()) {
-        double dist = calc_distance_coords(*coord_1, *coord_2);
+    if (city1 != coords.end() && city2 != coords.end()) {
+        double dist = (*city1)->getDistanceTo(*city2);
         std::cout << CLR_GREEN << "Distance between the cities: " << dist << " kilometers" << CLR_NORMAL << std::endl;
     } else {
         std::cout << CLR_RED << "One of the cities you entered was not found!" << CLR_NORMAL << std::endl;

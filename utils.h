@@ -9,10 +9,11 @@
 
 #ifndef UTILS_H
 #define UTILS_H
-#include "coordinate.h"
+#include "city.h"
 
 double degree_to_radian(double value);
-double calc_distance_coords(std::unique_ptr<Coordinate> &coord1, std::unique_ptr<Coordinate> &coord2);
+double calc_distance_cities(std::unique_ptr<City> &city1, std::unique_ptr<City> &city2);
+double calc_distance_cities(double latitude, double longitude, std::unique_ptr<City> &city2);
 double clear_screen();
 
 #endif

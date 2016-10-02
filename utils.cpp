@@ -11,7 +11,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
-#include "coordinate.h"
+#include "city.h"
 
 /* Need to define this macro to access the macro definitions for common math constants */
 #define _USE_MATH_DEFINES
@@ -34,12 +34,23 @@ double degree_to_radian(double value) {
 /* Function to calculate the distance between two latitudes and two longitudes using Haversine formula 
 *  https://en.wikipedia.org/wiki/Haversine_formula
 */
-double calc_distance_coords(std::unique_ptr<Coordinate> &coord1, std::unique_ptr<Coordinate> &coord2) {
+double calc_distance_cities(std::unique_ptr<City> &city1, std::unique_ptr<City> &city2) {
 	double lat1_rad, lon1_rad, lat2_rad, lon2_rad, x, y;
-	lat1_rad = degree_to_radian(coord1->getLatitude());
-	lon1_rad = degree_to_radian(coord1->getLongitude());
-	lat2_rad = degree_to_radian(coord2->getLatitude());
-	lon2_rad = degree_to_radian(coord2->getLongitude());
+	lat1_rad = degree_to_radian(city1->getLatitude());
+	lon1_rad = degree_to_radian(city1->getLongitude());
+	lat2_rad = degree_to_radian(city2->getLatitude());
+	lon2_rad = degree_to_radian(city2->getLongitude());
+	x = sin((lat2_rad - lat1_rad) / 2);
+	y = sin((lon2_rad - lon1_rad) / 2);
+	return 2.0 * EARTH_RADIUS_KM * asin(sqrt(x * x + cos(lat1_rad) * cos(lat2_rad) * y * y));
+}
+
+double calc_distance_cities(double latitude, double longitude, std::unique_ptr<City> &target_city) {
+	double lat1_rad, lon1_rad, lat2_rad, lon2_rad, x, y;
+	lat1_rad = degree_to_radian(latitude);
+	lon1_rad = degree_to_radian(longitude);
+	lat2_rad = degree_to_radian(target_city->getLatitude());
+	lon2_rad = degree_to_radian(target_city->getLongitude());
 	x = sin((lat2_rad - lat1_rad) / 2);
 	y = sin((lon2_rad - lon1_rad) / 2);
 	return 2.0 * EARTH_RADIUS_KM * asin(sqrt(x * x + cos(lat1_rad) * cos(lat2_rad) * y * y));
