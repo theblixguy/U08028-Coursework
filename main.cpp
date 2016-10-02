@@ -28,7 +28,7 @@
 #define CLR_YELLOW  "\x1B[33m"
 #define CLR_GREEN   "\x1B[32m"
 
-/* STL vector of unique_ptr's pointing to our custom City class objects */
+/* Vector of unique_ptr's pointing to our custom City class objects */
 std::vector<std::unique_ptr<City>> coords;
 
 /* Function signatures */

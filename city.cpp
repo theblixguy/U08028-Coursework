@@ -25,5 +25,5 @@ void City::setCity(double latitude, double longitude, std::string city, std::str
 
 /* Function that gets the distance from current coords to another city (coords) */
 double City::getDistanceTo(std::unique_ptr<City> &target_city) {
-	return calc_distance_cities(city_latitude, city_longitude, *target_city);
+	return calc_distance_cities(city_latitude, city_longitude, target_city);
 }
