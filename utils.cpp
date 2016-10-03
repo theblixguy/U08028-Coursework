@@ -58,7 +58,8 @@ double calc_distance_cities(double latitude, double longitude, std::unique_ptr<C
 	return 2.0 * EARTH_RADIUS_KM * asin(sqrt(x * x + cos(lat1_rad) * cos(lat2_rad) * y * y));
 }
 
-/* Function to check if a string is comprised of only alphabets */
+/* Function to check if a string is comprised of only alphabets
+*/
 bool isAlphaString(std::string str) {
 	return std::regex_match(str, std::regex("^[A-Za-z]+$"));
 }

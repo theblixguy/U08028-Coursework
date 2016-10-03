@@ -6,7 +6,9 @@
 *
 * This code uses some C++ 11 and C++ 14 features like auto, std::make_unique, std::function, and lambdas 
 * so please don't forget to add -std=c++14 to g++ when compiling!
-*
+* 
+* To enable printing of performance stats (i.e time taken to sort & save/load cities data), add 
+* -D PRINT_PERF_STATS to g++ or add $(PERF_STAT_FLAG) to main.o target in makefile!
 */
 
 /* Imports we need */
@@ -17,6 +19,7 @@
 #include <vector>
 #include <array>
 #include <functional>
+#include <chrono>
 #include "city.h"
 #include "utils.h"
 
@@ -30,8 +33,16 @@
 #define CLR_YELLOW  "\x1B[33m"
 #define CLR_GREEN   "\x1B[32m"
 #define CLR_CYAN    "\x1B[36m"
+#define CLR_MAGENTA "\x1B[35m"
 #define BOLD_ON     "\x1B[1m"
 #define BOLD_OFF    "\x1B[21m"
+
+/* Throw error if on Windows as there's some changes that need to be done to properly support it. 
+* There are some minor changes that needs to be made in utils.cpp
+*/
+#ifdef _WIN32
+#error Sorry, you cannot compile this program on Windows (yet)
+#endif
 
 /* Vector of unique_ptr's pointing to our custom City class objects */
 std::vector<std::unique_ptr<City>> cities;
@@ -41,7 +52,6 @@ void printProgramIntro();
 void printProgramMenu();
 void sortCities();
 void addCity();
-auto cityExists();
 void displayAllCities();
 void handleMenuChoice();
 void modifyCity();
@@ -51,10 +61,21 @@ void exitProgram();
 void loadCitiesData();
 void saveCitiesData();
 int getProgramMenuChoice();
+auto cityExists();
 
 /* Duh */
 int main() {
+
+#ifdef PRINT_PERF_STATS
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     loadCitiesData();
+    std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+    std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to load cities data into vector" << CLR_NORMAL << std::endl;
+#else
+    loadCitiesData();
+#endif
+
     printProgramIntro();
     printProgramMenu();
     handleMenuChoice();
@@ -74,7 +95,7 @@ void printProgramMenu() {
     std::cout << "\nPlease enter your choice\n\n0. Add a city\n1. Modify a city\n2. Delete a city\n3. Find distance between cities\n4. Display all cities\n5. Exit\n\n";
 }
 
-/* Function that reads the menu choice from standard input and returns it to the callee */
+/* Function that reads the menu choice from standard input and returns it to the caller */
 int getProgramMenuChoice() {
     int choice = 0;
     std::cin >> choice;
@@ -84,9 +105,21 @@ int getProgramMenuChoice() {
 
 /* Function to sort our vector in ascending order (A-Z) */
 void sortCities() {
+
+#ifdef PRINT_PERF_STATS
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     std::sort(cities.begin(), cities.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
         return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
     });
+    std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+    std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to sort " << cities.size() << " cities" << CLR_NORMAL << std::endl;
+#else
+    std::sort(cities.begin(), cities.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
+        return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
+    });
+#endif
+
 }
 
 /* Function that loads data for cities from the disk into the vector */
@@ -124,7 +157,6 @@ void saveCitiesData() {
     }
 
     data_file.close();
-
 }
 
 /* Function that reads the city name and coordinates from standard input and creates a new City unique_ptr in our vector */
@@ -137,21 +169,21 @@ void addCity() {
     std::cout << "Enter the name of the city: " << std::endl;
     std::getline(std::cin, city_name);
 
-    while (!isAlphaString(city_name))
-    {
+    while (!isAlphaString(city_name)) {
         std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
         std::cin.clear();
         std::getline(std::cin, city_name);
     }
+
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country);
 
-    while (!isAlphaString(city_country))
-    {
+    while (!isAlphaString(city_country)) {
         std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
         std::cin.clear();
         std::getline(std::cin, city_country);
     }
+
     std::cout << "Enter the latitude of the city: " << std::endl;
     std::cin >> latitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -184,8 +216,7 @@ void modifyCity() {
     std::cout << "Enter the name of the city to modify: " << std::endl;
     std::getline(std::cin, city_name);
 
-    while (!isAlphaString(city_name))
-    {
+    while (!isAlphaString(city_name)) {
         std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
         std::cin.clear();
         std::getline(std::cin, city_name);
@@ -194,8 +225,7 @@ void modifyCity() {
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country);
 
-    while (!isAlphaString(city_country))
-    {
+    while (!isAlphaString(city_country)) {
         std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
         std::cin.clear();
         std::getline(std::cin, city_country);
@@ -231,8 +261,7 @@ void deleteCity() {
     std::cout << "Enter the name of the city to delete: " << std::endl;
     std::getline(std::cin, city_name);
 
-    while (!isAlphaString(city_name))
-    {
+    while (!isAlphaString(city_name)) {
         std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
         std::cin.clear();
         std::getline(std::cin, city_name);
@@ -241,8 +270,7 @@ void deleteCity() {
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country);
 
-    while (!isAlphaString(city_country))
-    {
+    while (!isAlphaString(city_country)) {
         std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
         std::cin.clear();
         std::getline(std::cin, city_country);
@@ -274,7 +302,10 @@ void displayAllCities() {
     handleMenuChoice();
 }
 
-/* Function that finds the distance in kilometers between two Cities */
+/* Function that finds the distance in kilometers between two Cities 
+*  TODO: Add error handling while reading double values
+*  TODO: Fix bug where having a space in the city name causes program to reject input
+*/
 void findDistCities() {
     std::string city_1;
     std::string city_country_1;
@@ -284,8 +315,7 @@ void findDistCities() {
     std::cout << "Enter the name of the first city: " << std::endl;
     std::getline(std::cin, city_1);
 
-    while (!isAlphaString(city_1))
-    {
+    while (!isAlphaString(city_1)) {
         std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
         std::cin.clear();
         std::getline(std::cin, city_1);
@@ -294,8 +324,7 @@ void findDistCities() {
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country_1);
 
-    while (!isAlphaString(city_country_1))
-    {
+    while (!isAlphaString(city_country_1)) {
         std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
         std::cin.clear();
         std::getline(std::cin, city_1);
@@ -304,8 +333,7 @@ void findDistCities() {
     std::cout << "Enter the name of the second city: " << std::endl;
     std::getline(std::cin, city_2);
 
-    while (!isAlphaString(city_2))
-    {
+    while (!isAlphaString(city_2)) {
         std::cout << CLR_RED << "City name cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city name: ";
         std::cin.clear();
         std::getline(std::cin, city_2);
@@ -314,8 +342,7 @@ void findDistCities() {
     std::cout << "Enter the name of the country the city is located in: " << std::endl;
     std::getline(std::cin, city_country_2);
 
-    while (!isAlphaString(city_country_2))
-    {
+    while (!isAlphaString(city_country_2)) {
         std::cout << CLR_RED << "City country cannot have numbers or any other symbols in it. " << CLR_NORMAL << "Please re-enter the city country: ";
         std::cin.clear();
         std::getline(std::cin, city_country_2);
@@ -339,7 +366,17 @@ void findDistCities() {
 *  Exit is automatically handled as the control returns to main() which just calls return 0 and exits our program
 */
 void exitProgram() {
+
+#ifdef PRINT_PERF_STATS
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     saveCitiesData();
+    std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+    std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to save cities data to disk" << CLR_NORMAL << std::endl;
+#else
+    saveCitiesData();
+#endif
+
     cities.clear();
     std::cout << CLR_GREEN << "Goodbye!" << CLR_NORMAL << std::endl;
 }

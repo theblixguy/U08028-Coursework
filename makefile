@@ -6,6 +6,7 @@
 
 CXX= g++
 CXXFLAGS= -c -Wall -Wextra -std=c++14
+PERF_STAT_FLAG= -D PRINT_PERF_STATS
 
 all: cities
 
