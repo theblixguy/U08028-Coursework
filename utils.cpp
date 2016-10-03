@@ -13,6 +13,7 @@
 #include <memory>
 #include <regex>
 #include "city.h"
+#include "simple_vector.h"
 
 /* Need to define this macro to access the macro definitions for common math constants */
 #define _USE_MATH_DEFINES
@@ -65,8 +66,8 @@ bool isAlphaString(std::string str) {
 }
 
 /* Tokenize a comma separated string and return it in a vector */
-std::vector<std::string> split_line(char separator, const std::string &line) {
-  std::vector<std::string> tokens;
+SimpleVector<std::string> split_line(char separator, const std::string &line) {
+  SimpleVector<std::string> tokens;
   std::string::size_type begin = 0;
   std::string::size_type end = 0;
   while ((end = line.find(separator, begin)) != std::string::npos) {

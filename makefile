@@ -15,18 +15,18 @@ cities: main.o city.o utils.o
 	$(CXX) main.o city.o utils.o -o cities
 	@echo	"Done!"
 
-main.o: main.cpp
+main.o: main.cpp simple_vector.h
 	@echo	"Compiling main.cpp..."
 	@echo	"Note: Compiling main.cpp throws a -Wmissing-braces warning. It is actually a bug (LLVM #21629) so please ignore"
 	$(CXX) $(CXXFLAGS) main.cpp
 	@echo 	"Done!"
 
-city.o: city.cpp city.h
+city.o: city.cpp city.h simple_vector.h
 	@echo	"Compiling city.cpp..."
 	$(CXX) $(CXXFLAGS) city.cpp
 	@echo	"Done!"
 
-utils.o: utils.cpp utils.h
+utils.o: utils.cpp utils.h simple_vector.h
 	@echo	"Compiling utils.cpp..."
 	$(CXX) $(CXXFLAGS) utils.cpp
 	@echo	"Done!"

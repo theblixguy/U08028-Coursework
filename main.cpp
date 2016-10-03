@@ -16,10 +16,10 @@
 #include <sstream>
 #include <fstream>
 #include <memory>
-#include <vector>
 #include <array>
 #include <functional>
 #include <chrono>
+#include "simple_vector.h"
 #include "city.h"
 #include "utils.h"
 
@@ -45,7 +45,7 @@
 #endif
 
 /* Vector of unique_ptr's pointing to our custom City class objects */
-std::vector<std::unique_ptr<City>> cities;
+SimpleVector<std::unique_ptr<City>> cities;
 
 /* Function signatures */
 void printProgramIntro();
@@ -136,7 +136,7 @@ void loadCitiesData() {
 
     while (getline(data_file, line)) {
     if (line.empty()) continue;
-    std::vector<std::string> tokens = split_line(',', line);
+    SimpleVector<std::string> tokens = split_line(',', line);
     cities.push_back(std::make_unique<City>(stod(tokens.at(2)), stod(tokens.at(3)), tokens.at(0), tokens.at(1)));
   }
 
