@@ -72,6 +72,11 @@ public:
 		container[container_size - 1] = val;
 	}
 
+	void push_back(T&& val) {
+		resize(container_size + 1);
+		container[container_size - 1] = std::move(val);
+	}
+
 	void pop_back() {
 		resize(container_size - 1);
 	}
