@@ -12,10 +12,17 @@
 #ifndef SIMPLE_VECTOR_H
 #define SIMPLE_VECTOR_H
 
+/* Imports we need */
 #include <iostream>
 #include <cstddef>
 #include <stdexcept>
 
+/* Memory resize multiplier 
+* Controls the growth rate of the vector's capacity
+*
+* 1.5 provides a good balance between speed and space while still providing an amotized O(1) insert. 
+* Some implementations use 2 but it's up to whether you want to prioritize performance or memory usage.
+*/
 #define RESIZE_MULTIPLIER 1.5
 
 template<class T> class SimpleVector {
@@ -92,8 +99,7 @@ SimpleVector<T>::SimpleVector(const SimpleVector& vec) {
 }
 
 template<class T>
-SimpleVector<T>::SimpleVector(SimpleVector&& vec) : SimpleVector()
-{
+SimpleVector<T>::SimpleVector(SimpleVector&& vec) : SimpleVector() {
   swap(*this, vec);
 }
 
