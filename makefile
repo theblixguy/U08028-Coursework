@@ -4,8 +4,8 @@
 # Student number: 14076594
 # Last modified: Sat 1 Oct 2016 21:12
 
-CXX= g++
-CXXFLAGS= -c -Wall -Wextra -std=c++14
+CXX= clang++
+CXXFLAGS= -c -Wall -Wextra -O3 -std=c++14
 PERF_STAT_FLAG= -D PRINT_PERF_STATS
 
 all: cities
@@ -18,10 +18,10 @@ cities: main.o city.o utils.o
 main.o: main.cpp simple_vector.h
 	@echo	"Compiling main.cpp..."
 	@echo	"Note: Compiling main.cpp throws a -Wmissing-braces warning. It is actually a bug (LLVM #21629) so please ignore"
-	$(CXX) $(CXXFLAGS) main.cpp
+	$(CXX) $(PERF_STAT_FLAG) $(CXXFLAGS) main.cpp
 	@echo 	"Done!"
 
-city.o: city.cpp city.h simple_vector.h
+city.o: city.cpp city.h
 	@echo	"Compiling city.cpp..."
 	$(CXX) $(CXXFLAGS) city.cpp
 	@echo	"Done!"

@@ -36,7 +36,7 @@ double degree_to_radian(double value) {
 /* Function to calculate the distance between two latitudes and two longitudes using Haversine formula 
 *  https://en.wikipedia.org/wiki/Haversine_formula
 */
-double calc_distance_cities(std::unique_ptr<City> &city1, std::unique_ptr<City> &city2) {
+double calc_distance_cities(std::shared_ptr<City> &city1, std::shared_ptr<City> &city2) {
 	double lat1_rad, lon1_rad, lat2_rad, lon2_rad, x, y;
 	lat1_rad = degree_to_radian(city1->getLatitude());
 	lon1_rad = degree_to_radian(city1->getLongitude());
@@ -48,7 +48,7 @@ double calc_distance_cities(std::unique_ptr<City> &city1, std::unique_ptr<City> 
 }
 
 /* Same as above, but accepts coords of one City directly */
-double calc_distance_cities(double latitude, double longitude, std::unique_ptr<City> &target_city) {
+double calc_distance_cities(double latitude, double longitude, std::shared_ptr<City> &target_city) {
 	double lat1_rad, lon1_rad, lat2_rad, lon2_rad, x, y;
 	lat1_rad = degree_to_radian(latitude);
 	lon1_rad = degree_to_radian(longitude);

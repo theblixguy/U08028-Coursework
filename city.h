@@ -23,7 +23,7 @@ public:
     City(double latitude, double longitude, std::string city, std::string country);
  
     void setCity(double latitude, double longitude, std::string city, std::string country);
-    double getDistanceTo(std::unique_ptr<City> &target_city);
+    double getDistanceTo(std::shared_ptr<City> &target_city);
  
     double getLatitude() { return city_latitude; }
     double getLongitude() { return city_longitude; }

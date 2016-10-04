@@ -4,7 +4,7 @@
 * Written by: Suyash Srijan
 * Student number: 14076594
 *
-* This code uses some C++ 11 and C++ 14 features like auto, std::make_unique, std::function, and lambdas 
+* This code uses some C++ 11 and C++ 14 features like auto, std::make_shared, std::function, and lambdas 
 * so please don't forget to add -std=c++14 to g++ when compiling!
 * 
 * To enable printing of performance stats (i.e time taken to sort & save/load cities data), add 
@@ -44,8 +44,8 @@
 #error Sorry, you cannot compile this program on Windows (yet)
 #endif
 
-/* Vector of unique_ptr's pointing to our custom City class objects */
-SimpleVector<std::unique_ptr<City>> cities;
+/* Vector of shared_ptr's pointing to our custom City class objects */
+SimpleVector<std::shared_ptr<City>> cities;
 
 /* Function signatures */
 void printProgramIntro();
@@ -108,14 +108,14 @@ void sortCities() {
 
 #ifdef PRINT_PERF_STATS
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-    std::sort(cities.begin(), cities.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
+    std::sort(cities.begin(), cities.end(), [](const std::shared_ptr<City>& city1, const std::shared_ptr<City>& city2) {
         return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
     });
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
     std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to sort " << cities.size() << " cities" << CLR_NORMAL << std::endl;
 #else
-    std::sort(cities.begin(), cities.end(), [](const std::unique_ptr<City>& city1, const std::unique_ptr<City>& city2) {
+    std::sort(cities.begin(), cities.end(), [](const std::shared_ptr<City>& city1, const std::shared_ptr<City>& city2) {
         return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
     });
 #endif
@@ -137,7 +137,7 @@ void loadCitiesData() {
     while (getline(data_file, line)) {
     if (line.empty()) continue;
     SimpleVector<std::string> tokens = split_line(',', line);
-    cities.push_back(std::make_unique<City>(stod(tokens.at(2)), stod(tokens.at(3)), tokens.at(0), tokens.at(1)));
+    cities.push_back(std::make_shared<City>(stod(tokens.at(2)), stod(tokens.at(3)), tokens.at(0), tokens.at(1)));
   }
 
   data_file.close();
@@ -159,7 +159,7 @@ void saveCitiesData() {
     data_file.close();
 }
 
-/* Function that reads the city name and coordinates from standard input and creates a new City unique_ptr in our vector */
+/* Function that reads the city name and coordinates from standard input and creates a new City shared_ptr in our vector */
 void addCity() {
     std::string city_name;
     std::string city_country;
@@ -199,7 +199,7 @@ void addCity() {
 
 /* Function that finds a city and returns an iterator to it, If no such city is found, then the function returns cities.end() */
 auto cityExists(std::string city, std::string country) {
-    auto it = std::find_if(cities.begin(), cities.end(), [city, country](const std::unique_ptr<City>& city1)
+    auto it = std::find_if(cities.begin(), cities.end(), [city, country](const std::shared_ptr<City>& city1)
     { return (city1->getCity().compare(city) == 0) && (city1->getCityCountry().compare(country) == 0); });
     return it;
 }
@@ -279,7 +279,7 @@ void deleteCity() {
     auto city = cityExists(city_name, city_country);
 
     if (city != cities.end()) {
-        swap(*city, cities.back());
+        std::swap(*city, *cities.back());
         cities.pop_back();
         std::cout << CLR_GREEN << "City deleted!" << CLR_NORMAL << std::endl;
     } else {
@@ -376,8 +376,6 @@ void exitProgram() {
 #else
     saveCitiesData();
 #endif
-
-    cities.clear();
     std::cout << CLR_GREEN << "Goodbye!" << CLR_NORMAL << std::endl;
 }
 
