@@ -38,14 +38,18 @@
 #define BOLD_OFF    "\x1B[21m"
 
 /* Throw error if on Windows as there's some changes that need to be done to properly support it. 
-* There are some minor changes that needs to be made in utils.cpp
+* TODO: There are some minor changes that needs to be made in utils.cpp to support compiling on Win32
 */
 #ifdef _WIN32
 #error Sorry, you cannot compile this program on Windows (yet)
 #endif
 
+/* Simplify shared_ptr declaration */
+template <typename T>
+using SPtr = typename std::shared_ptr<T>;
+
 /* Vector of shared_ptr's pointing to our custom City class objects */
-SimpleVector<std::shared_ptr<City>> cities;
+SimpleVector<SPtr<City>> cities;
 
 /* Function signatures */
 void printProgramIntro();
@@ -108,14 +112,14 @@ void sortCities() {
 
 #ifdef PRINT_PERF_STATS
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-    std::sort(cities.begin(), cities.end(), [](const std::shared_ptr<City>& city1, const std::shared_ptr<City>& city2) {
+    std::sort(cities.begin(), cities.end(), [](const SPtr<City>& city1, const SPtr<City>& city2) {
         return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
     });
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
     std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to sort " << cities.size() << " cities" << CLR_NORMAL << std::endl;
 #else
-    std::sort(cities.begin(), cities.end(), [](const std::shared_ptr<City>& city1, const std::shared_ptr<City>& city2) {
+    std::sort(cities.begin(), cities.end(), [](const SPtr<City>& city1, const SPtr<City>& city2) {
         return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
     });
 #endif
@@ -190,7 +194,7 @@ void addCity() {
     std::cout << "Enter the longitude of the city: " << std::endl;
     std::cin >> longitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    cities.push_back(std::make_unique<City>(latitude, longitude, city_name, city_country));
+    cities.push_back(std::make_shared<City>(latitude, longitude, city_name, city_country));
     std::cout << CLR_GREEN << "City added!" << CLR_NORMAL << std::endl;
 
     printProgramMenu();
@@ -199,7 +203,7 @@ void addCity() {
 
 /* Function that finds a city and returns an iterator to it, If no such city is found, then the function returns cities.end() */
 auto cityExists(std::string city, std::string country) {
-    auto it = std::find_if(cities.begin(), cities.end(), [city, country](const std::shared_ptr<City>& city1)
+    auto it = std::find_if(cities.begin(), cities.end(), [city, country](const SPtr<City>& city1)
     { return (city1->getCity().compare(city) == 0) && (city1->getCityCountry().compare(country) == 0); });
     return it;
 }

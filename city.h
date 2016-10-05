@@ -10,6 +10,10 @@
 #ifndef CITY_H
 #define CITY_H
 #include <string>
+
+/* Simplify unique_ptr decl */
+template <typename T>
+using SPtr = typename std::shared_ptr<T>;
  
 class City
 {
@@ -23,7 +27,7 @@ public:
     City(double latitude, double longitude, std::string city, std::string country);
  
     void setCity(double latitude, double longitude, std::string city, std::string country);
-    double getDistanceTo(std::shared_ptr<City> &target_city);
+    double getDistanceTo(SPtr<City> &target_city);
  
     double getLatitude() { return city_latitude; }
     double getLongitude() { return city_longitude; }

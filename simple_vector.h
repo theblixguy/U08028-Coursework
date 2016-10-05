@@ -5,7 +5,7 @@
 * which can be found at http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3797.pdf
 * 
 * This container is not 100% standards compliant, is missing some features, and may not be as
-* fast as std::vector but is functional enough for our program's needs.
+* optimized as std::vector but is functional enough for our program's needs.
 *
 */
 
@@ -18,6 +18,7 @@
 #include <stdexcept>
 
 /* Memory resize multiplier 
+*
 * Controls the growth rate of the vector's capacity
 *
 * 1.5 provides a good balance between speed and space while still providing an amotized O(1) insert. 
@@ -40,6 +41,8 @@ template<class T> class SimpleVector {
     T& at(size_type idx);
     const T& at(size_type idx) const;
     void clear();
+    value_type* data() noexcept;
+    value_type* data() const noexcept;
     bool empty() const;
     size_type size() const;
     void push_back(const T& item);
@@ -48,11 +51,11 @@ template<class T> class SimpleVector {
     void resize(size_type sz, const value_type& obj);
     void reserve(size_type sz);
 
-    iterator begin();
-    iterator end();
+    iterator begin() noexcept;
+    iterator end() noexcept;
     iterator back();
-    const_iterator begin() const;
-    const_iterator end() const;
+    const_iterator begin() const noexcept;
+    const_iterator end() const noexcept;
     const_iterator back() const;
 
     SimpleVector(size_type sz, const value_type& obj = T());
@@ -78,6 +81,7 @@ template<class T> class SimpleVector {
     void make_container_bigger(size_type sz);
 };
 
+/* Constructor */
 template<class T>
 SimpleVector<T>::SimpleVector(size_type sz, const value_type& obj) {
   container_size = sz;
@@ -88,6 +92,7 @@ SimpleVector<T>::SimpleVector(size_type sz, const value_type& obj) {
   }
 }
 
+/* Constructor */
 template<class T>
 SimpleVector<T>::SimpleVector(const SimpleVector& vec) {
   container_size = vec.container_size;
@@ -98,11 +103,13 @@ SimpleVector<T>::SimpleVector(const SimpleVector& vec) {
   }
 }
 
+/* Constructor */
 template<class T>
 SimpleVector<T>::SimpleVector(SimpleVector&& vec) : SimpleVector() {
   swap(*this, vec);
 }
 
+/* Constructor */
 template<class T>
 SimpleVector<T>::SimpleVector() {
   container_capacity = 0;
@@ -110,42 +117,54 @@ SimpleVector<T>::SimpleVector() {
   data_chunk = nullptr;
 }
 
+/* Destructor
+*
+* Iterate though all the elements in our storage chunk and call their destructors, and then finally deallocate the chunk
+*/
 template<class T>
 SimpleVector<T>::~SimpleVector() {
   for (iterator iter = data_chunk; iter != data_chunk + container_size; ++iter) {
     mem_allocator.destroy(iter);
   }
-  mem_allocator.deallocate(data_chunk,container_capacity);
+  mem_allocator.deallocate(data_chunk, container_capacity);
 }
 
+/* Return the element stored at idx or throw out_of_range exception if the element doesn't exist */
 template<class T>
 T& SimpleVector<T>::operator[] (size_type idx) {
+  if (idx >= container_size) throw std::out_of_range("Index out of range");
   return data_chunk[idx];
 }
 
+/* Return the element stored at idx or throw out_of_range exception if the element doesn't exist */
 template<class T>
 const T& SimpleVector<T>::operator[] (size_type idx) const {
+  if (idx >= container_size) throw std::out_of_range("Index out of range");
   return data_chunk[idx];
 }
 
+/* Swap vectors on move */
 template<class T>
 SimpleVector<T>& SimpleVector<T>::operator=(SimpleVector<T> vec) noexcept {
   swap(*this, vec);
   return *this;
 }
 
+/* Return the element stored at idx or throw out_of_range exception if the element doesn't exist */
 template<class T>
 T& SimpleVector<T>::at(size_type idx) {
   if (idx >= container_size) throw std::out_of_range("Index out of range");
   return data_chunk[idx];
 }
 
+/* Return the element stored at idx or throw out_of_range exception if the element doesn't exist */
 template<class T>
 const T& SimpleVector<T>::at(size_type idx) const {
   if (idx >= container_size) throw std::out_of_range("Index out of range");
   return data_chunk[idx];
 }
 
+/* Basically the same as ~SimpleVector() */
 template<class T>
 void SimpleVector<T>::clear() {
   for (iterator iter = data_chunk; iter != data_chunk + container_size; ++iter) {
@@ -155,25 +174,44 @@ void SimpleVector<T>::clear() {
 }
 
 template<class T>
+typename SimpleVector<T>::value_type* SimpleVector<T>::data() noexcept {
+  return begin();
+}
+
+template<class T>
+typename SimpleVector<T>::value_type* SimpleVector<T>::data() const noexcept {
+  return begin();
+}
+
+/* Check if the container has any elements and return the result */
+template<class T>
 bool SimpleVector<T>::empty() const {
   return container_size == 0;
 }
 
+/* Return the number of elements in the container */
 template<class T>
 typename SimpleVector<T>::size_type SimpleVector<T>::size() const {
   return container_size;
 }
 
+/* Insert an element into the container */
 template<class T>
 void SimpleVector<T>::push_back(const T& item) {
   resize(container_size + 1, item);
 }
 
+/* Remove the last item from the container */
 template<class T>
 void SimpleVector<T>::pop_back() {
   resize(container_size - 1);
 }
 
+/* Resize the storage
+*
+*  If the size of the container is bigger than the passed size then allocate more storage to
+*  the container, otherwise reduce the amount of storage allocated to the container
+*/
 template<class T>
 void SimpleVector<T>::resize(size_type sz) {
   if (container_size == sz) return;
@@ -194,6 +232,7 @@ void SimpleVector<T>::resize(size_type sz) {
   container_size = sz;
 }
 
+/* Same as above except you can pass obj to the copy constructor's argument */ 
 template<class T>
 void SimpleVector<T>::resize(size_type sz, const value_type& obj) {
   if (container_size == sz) return;
@@ -211,6 +250,11 @@ void SimpleVector<T>::resize(size_type sz, const value_type& obj) {
   container_size = sz;
 }
 
+/* Reserve storage for the container
+* 
+*  Allocate more storage to the container but leave it uninitialized. Copy data from the
+*  old data_chunk to the new one
+*/
 template<class T>
 void SimpleVector<T>::reserve(size_type sz) {
   if (sz <= container_capacity) {
@@ -227,13 +271,14 @@ void SimpleVector<T>::reserve(size_type sz) {
     mem_allocator.construct(data_chunk + i, prev_data[i]);
   }
 
-  for (size_type i=0; i<container_size; i++) {
+  for (size_type i=0; i < container_size; i++) {
     mem_allocator.destroy(prev_data + i);
   }
 
   mem_allocator.deallocate(prev_data, prev_capacity);
 }
 
+/* Increase the container's storage capacity by the resize multiplier */
 template<class T>
 void SimpleVector<T>::make_container_bigger(size_type sz) {
   size_type new_capacity;
@@ -250,6 +295,7 @@ void SimpleVector<T>::make_container_bigger(size_type sz) {
   reserve(new_capacity);
 }
 
+/* Decrease the container's storage capacity */
 template<class T>
 void SimpleVector<T>::make_container_smaller(size_type sz) {
   for (iterator iter = data_chunk + sz; iter != data_chunk + container_size; ++iter) {
@@ -258,33 +304,39 @@ void SimpleVector<T>::make_container_smaller(size_type sz) {
   container_size = sz;
 }
 
+/* Return an iterator to the last element in the container */
 template<class T>
 typename SimpleVector<T>::iterator SimpleVector<T>::back() {
   return &data_chunk[container_size - 1];
 }
 
+/* Return a const iterator to the last element in the container */
 template<class T>
 typename SimpleVector<T>::const_iterator SimpleVector<T>::back() const {
   return &data_chunk[container_size - 1];
 }
 
+/* Return an iterator to the first element in the container */
 template<class T>
-typename SimpleVector<T>::iterator SimpleVector<T>::begin() {
+typename SimpleVector<T>::iterator SimpleVector<T>::begin() noexcept {
   return &data_chunk[0];
 }
 
+/* Return a const iterator to the first element in the container */
 template<class T>
-typename SimpleVector<T>::const_iterator SimpleVector<T>::begin() const {
+typename SimpleVector<T>::const_iterator SimpleVector<T>::begin() const noexcept {
   return &data_chunk[0];
 }
 
+/* Return an iterator to the past-the-end element in the container */
 template<class T>
-typename SimpleVector<T>::iterator SimpleVector<T>::end() {
+typename SimpleVector<T>::iterator SimpleVector<T>::end() noexcept {
   return &data_chunk[container_size];
 }
 
+/* Return a const iterator to the past-the-end element in the container */
 template<class T>
-typename SimpleVector<T>::const_iterator SimpleVector<T>::end() const {
+typename SimpleVector<T>::const_iterator SimpleVector<T>::end() const noexcept {
   return &data_chunk[container_size];
 }
 
