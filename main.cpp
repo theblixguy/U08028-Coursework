@@ -9,6 +9,7 @@
 * 
 * To enable printing of performance stats (i.e time taken to sort & save/load cities data), add 
 * -D PRINT_PERF_STATS to g++ or add $(PERF_STAT_FLAG) to main.o target in makefile!
+*
 */
 
 /* Imports we need */
@@ -69,7 +70,6 @@ auto cityExists();
 
 /* Duh */
 int main() {
-
 #ifdef PRINT_PERF_STATS
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     loadCitiesData();
@@ -113,14 +113,14 @@ void sortCities() {
 #ifdef PRINT_PERF_STATS
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     std::sort(cities.begin(), cities.end(), [](const SPtr<City>& city1, const SPtr<City>& city2) {
-        return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
+        return city1->getCity() < city2->getCity(); 
     });
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
     std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to sort " << cities.size() << " cities" << CLR_NORMAL << std::endl;
 #else
     std::sort(cities.begin(), cities.end(), [](const SPtr<City>& city1, const SPtr<City>& city2) {
-        return city1->getCity() < city2->getCity() && city1->getCityCountry() < city2->getCityCountry(); 
+        return city1->getCity() < city2->getCity(); 
     });
 #endif
 

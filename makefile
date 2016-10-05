@@ -4,7 +4,7 @@
 # Student number: 14076594
 # Last modified: Sat 1 Oct 2016 21:12
 
-CXX= clang++
+CXX= g++
 CXXFLAGS= -c -Wall -Wextra -O3 -std=c++14
 PERF_STAT_FLAG= -D PRINT_PERF_STATS
 

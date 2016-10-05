@@ -1,6 +1,9 @@
 /*
 * simple_vector.h
 *
+* Written by: Suyash Srijan
+* Student number: 14076594
+*
 * A simple implementation of a vector, based on the latest C++ container spec (draft)
 * which can be found at http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3797.pdf
 * 
@@ -21,11 +24,16 @@
 *
 * Controls the growth rate of the vector's capacity
 *
-* 1.5 provides a good balance between speed and space while still providing an amotized O(1) insert. 
-* Some implementations use 2 but it's up to whether you want to prioritize performance or memory usage.
+* 1.5 provides a good balance between speed and space while still making sure push_back's are amortized O(1). 
+* Some implementations use 2 but it's up to whether you want to prioritize performance or memory usage. Having 
+* a much lower resize multiplier (say 1.2) would actually result in substantial decrease in performance (due 
+* to constant reallocations) and having a much higher resize multiplier (say 3) would result in substantial 
+* increase in memory usage and caching issues while providing little to no performance improvements.
+* 
 */
 #define RESIZE_MULTIPLIER 1.5
 
+/* SimpleVector */
 template<class T> class SimpleVector {
   public:
 
@@ -42,7 +50,7 @@ template<class T> class SimpleVector {
     const T& at(size_type idx) const;
     void clear();
     value_type* data() noexcept;
-    value_type* data() const noexcept;
+    const value_type* data() const noexcept;
     bool empty() const;
     size_type size() const;
     void push_back(const T& item);
@@ -173,13 +181,15 @@ void SimpleVector<T>::clear() {
   mem_allocator.deallocate(data_chunk, container_capacity);
 }
 
+/* Returns a pointer to the first element in the container */
 template<class T>
 typename SimpleVector<T>::value_type* SimpleVector<T>::data() noexcept {
   return begin();
 }
 
+/* Returns a pointer to the first element in the container */
 template<class T>
-typename SimpleVector<T>::value_type* SimpleVector<T>::data() const noexcept {
+const typename SimpleVector<T>::value_type* SimpleVector<T>::data() const noexcept {
   return begin();
 }
 
