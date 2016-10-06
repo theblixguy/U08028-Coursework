@@ -1,23 +1,21 @@
-# Makefile for Cities program (U08028 Coursework)
+# Makefile for bench
 #
 # Written by: Suyash Srijan
 # Student number: 14076594
 
 CXX= g++
-CXXFLAGS= -c -Wall -Wextra -O3 -std=c++14
-PERF_STAT_FLAG= -D PRINT_PERF_STATS
+CXXFLAGS= -c -Wall -Wextra -std=c++14
 
-all: cities
+all: bench
 
-cities: main.o city.o utils.o
+bench: bench.o city.o utils.o
 	@echo	"Linking object files and generating executable..."
-	$(CXX) main.o city.o utils.o -o cities
+	$(CXX) bench.o city.o utils.o -o bench
 	@echo	"Done!"
 
-main.o: main.cpp simple_vector.h
+bench.o: bench.cpp simple_vector.h
 	@echo	"Compiling main.cpp..."
-	@echo	"Note: Compiling main.cpp throws a -Wmissing-braces warning. It is actually a bug (LLVM #21629) so please ignore"
-	$(CXX) $(PERF_STAT_FLAG) $(CXXFLAGS) main.cpp
+	$(CXX) $(PERF_STAT_FLAG) $(CXXFLAGS) bench.cpp
 	@echo 	"Done!"
 
 city.o: city.cpp city.h
@@ -32,5 +30,5 @@ utils.o: utils.cpp utils.h simple_vector.h
 
 clean:
 	@echo	"Removing old files..."
-	rm *o cities
+	rm *o bench
 	@echo	"Done!"

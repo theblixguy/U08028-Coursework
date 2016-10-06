@@ -9,9 +9,10 @@
 
 #ifndef UTILS_H
 #define UTILS_H
+
+#include <string>
 #include "city.h"
 #include "simple_vector.h"
-#include <string>
 
 double degree_to_radian(double value);
 double calc_distance_cities(std::shared_ptr<City> &city1, std::shared_ptr<City> &city2);

@@ -20,6 +20,7 @@
 #include <array>
 #include <functional>
 #include <chrono>
+#include <iomanip>
 #include "simple_vector.h"
 #include "city.h"
 #include "utils.h"
@@ -294,12 +295,19 @@ void deleteCity() {
     handleMenuChoice();
 }
 
-/* Function that prints all the cities and its coordinates that are in our vector */
+/* Function that prints all the cities and its coordinates that are in our vector in a formatted table */
 void displayAllCities() {
     sortCities();
 
+    std::cout << "Name                    Country                    Latitude          Longitude" << std::endl;
+    std::cout << "-------------------------------------------------------------------------------" << std::endl;
+
     for (auto&& item : cities) {
-        std::cout << "City name: " << item->getCity() << " | City country: " << item->getCityCountry() << " | City Latitude: " << item->getLatitude() << " | City Longitude: " << item->getLongitude() << std::endl;
+        std::cout << std::left << std::setw(24) << std::setfill(' ') << item->getCity();
+        std::cout << std::left << std::setw(27) << std::setfill(' ') << item->getCityCountry();
+        std::cout << std::left << std::setw(18) << std::setfill(' ') << item->getLatitude();
+        std::cout << std::left << std::setw(10) << std::setfill(' ') << item->getLongitude();
+        std::cout << std::endl;
     }
 
     printProgramMenu();
