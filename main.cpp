@@ -141,6 +141,7 @@ void loadCitiesData() {
 
     while (getline(data_file, line)) {
     if (line.empty()) continue;
+    line.erase(remove(line.begin(), line.end(), '\"'), line.end());
     SimpleVector<std::string> tokens = split_line(',', line);
     cities.push_back(std::make_shared<City>(stod(tokens.at(2)), stod(tokens.at(3)), tokens.at(0), tokens.at(1)));
   }

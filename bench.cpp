@@ -54,7 +54,7 @@ int main() {
 	std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << CLR_NORMAL << std::endl;
 	std::cout << std::endl;
 
-	std::cout << "Benchmark                    Wall Time (µs)        CPU Time (µs)           Iterations" << std::endl;
+	std::cout << "Benchmark                    Wall Time (ns)        CPU Time (ns)           Iterations" << std::endl;
 	std::cout << "--------------------------------------------------------------------------------------" << std::endl;
 
 	std::cout << std::left << std::setw(29) << std::setfill(' ') << "SimpleVector push_back()";

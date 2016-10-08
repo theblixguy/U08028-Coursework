@@ -4,7 +4,7 @@
 # Student number: 14076594
 
 CXX= g++
-CXXFLAGS= -c -Wall -Wextra -O3 -std=c++14
+CXXFLAGS= -c -Wall -Wextra -Ofast -std=c++14
 PERF_STAT_FLAG= -D PRINT_PERF_STATS
 
 all: cities
