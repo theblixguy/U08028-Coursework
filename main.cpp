@@ -102,8 +102,8 @@ int main() {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     loadCitiesData();
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-    std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to load cities data into vector" << CLR_NORMAL << std::endl;
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+    std::cout << CLR_MAGENTA << "Info: Took " << duration << " milliseconds to load cities data into vector" << CLR_NORMAL << std::endl;
 #else
     loadCitiesData();
 #endif
@@ -249,7 +249,7 @@ void modifyCity() {
     std::string city_name;
     std::string city_country;
     std::string new_city_name;
-    std:;string new_country_name;
+    std::string new_country_name;
     double latitude;
     double longitude;
 
@@ -427,8 +427,8 @@ void exitProgram() {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     saveCitiesData();
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-    std::cout << CLR_MAGENTA << "Info: Took " << duration << " microseconds to save cities data to disk" << CLR_NORMAL << std::endl;
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+    std::cout << CLR_MAGENTA << "Info: Took " << duration << " milliseconds to save cities data to disk" << CLR_NORMAL << std::endl;
 #else
     saveCitiesData();
 #endif
