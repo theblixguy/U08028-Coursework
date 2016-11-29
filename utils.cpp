@@ -1,5 +1,5 @@
 /* 
-* Utils.cpp
+* utils.cpp
 * Contains helper functions for the Cities program
 *
 * Written by: Suyash Srijan
@@ -15,52 +15,125 @@
 #include "city.h"
 #include "simple_vector.h"
 
-/* Need to define this macro to access the macro definitions for common math constants */
-#define _USE_MATH_DEFINES
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#endif
 
-/* Macro that contains the earth's radius in kilometers */
-#define EARTH_RADIUS_KM 6371.0
+/* Pi constant */
+const double PI = 3.14159265358979323846264338327950288;
+
+/* Constants that define the Earth ellipsoid WGS84 */
+const double A_AXIS =  6378137.0;
+const double B_AXIS = 6356752.31;
+const double FLATTENING = 0.00335281066;
+
+/* More constants for Vincenty formula implementation */
+const double U_CONST = 0.99664718934; // 1 - FLATTENING
 
 /* Function to clear the console screen. It's a combination of two ANSI escape codes, \033[2J to clear
-* the console screen from top to bottom and, \033[1;1H to place the cursor at 1,1 (row, column)
+* the console screen from top to bottom and, \033[1;1H to place the cursor at 1,1 (row, column).
+* On Windows, it uses the console API to clear the screen programatically, which is much better than 
+* using std::system("cls"); for obvious reasons
 */
 void clear_screen() {
-	std::cout << "\033[2J\033[1;1H";
+	#if defined(_WIN32) || defined(_WIN64)
+		HANDLE stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    	COORD coord = {0, 0};
+    	DWORD count;
+    	CONSOLE_SCREEN_BUFFER_INFO screenBufInf;
+    	GetConsoleScreenBufferInfo(stdOutHandle, &screenBufInf);
+    	FillConsoleOutputCharacter(stdOutHandle, ' ', screenBufInf.dwSize.X * screenBufInf.dwSize.Y, coord, &count);
+    	SetConsoleCursorPosition(stdOutHandle, coord);
+	#else
+		std::cout << "\033[2J\033[1;1H";
+    #endif
+}
+
+/* Comparator for the caseInsensitiveCompare() function */
+bool caseInsensitiveComparator(unsigned char ch1, unsigned char ch2) {
+	 return std::tolower(ch1) == std::tolower(ch2);
+}
+
+/* Function to compare two strings while ignoring their case */
+bool caseInsensitiveCompare(std::string const& str1, std::string const& str2) {
+	if (str1.length() != str2.length()) return false;
+	return std::equal(str2.begin(), str2.end(), str1.begin(), caseInsensitiveComparator);
 }
 
 /* Function to convert a degree value to radian value */
 double degree_to_radian(double value) {
-	return (value * M_PI) / 180;
+	return (value * PI) / 180;
 }
 
-/* Function to calculate the distance between two latitudes and two longitudes using Haversine formula 
-*  https://en.wikipedia.org/wiki/Haversine_formula
+/* Function to calculate the distance between two coordinates using Vincenty's formula
+*  Based on JavaScript implementation found at http://movable-type.co.uk/scripts/latlong-vincenty-direct.html
+*/
+double calcDistance(double latitude1, double longitude1, double latitude2, double longitude2) {
+    double U1 = atan(U_CONST * tan(degree_to_radian(latitude1)));
+    double U2 = atan(U_CONST * tan(degree_to_radian(latitude2)));
+    double sinU1 = sin(U1), cosU1 = cos(U1);
+    double sinU2 = sin(U2), cosU2 = cos(U2);
+    double latDiff = degree_to_radian(longitude2 - longitude1);
+
+    double sigma;
+    double sinLambda;
+    double sinSigma;
+    double cosSigma;
+    double cosLambda;
+    double cosSqAlpha;
+    double cos2SigmaM;
+
+    double lambda = latDiff;
+    double prevLambda;
+    int iterLim = 100;
+
+    do {
+        sinLambda = sin(lambda);
+        cosLambda = cos(lambda);;
+        sinSigma = sqrt(pow(cosU2 * sinLambda, 2) + pow(cosU1 * sinU2 - sinU1 * cosU2 * cosLambda, 2));
+
+        if (sinSigma == 0)
+            return 0;
+
+        cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda;
+        sigma = atan(sinSigma / cosSigma);
+        double sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma;
+        cosSqAlpha = 1 - pow(sinAlpha, 2);
+    
+        if (cosSqAlpha == 0)
+            cos2SigmaM = 0;    
+        else
+            cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha;
+
+        double C = FLATTENING / 16 * cosSqAlpha * (4 + FLATTENING * (4 - 3 * cosSqAlpha));
+        prevLambda = lambda;
+        lambda = latDiff + (1 - C) * FLATTENING * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * pow(cos2SigmaM, 2))));
+    } while (std::abs(lambda - prevLambda) > 1e-12 && --iterLim > 0);
+
+    if (iterLim == 0)
+        return 0;
+
+    double uSq = cosSqAlpha * (pow(A_AXIS, 2) - pow(B_AXIS, 2)) / pow(B_AXIS, 2);
+    double A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+    double B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+    double deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * pow(cos2SigmaM, 2)) - B / 6 * cos2SigmaM * (-3 + 4 * pow(sinSigma, 2)) * (-3 + 4 * pow(cos2SigmaM, 2))));
+    
+    double dist = B_AXIS * A * (sigma - deltaSigma);
+    return dist / 1000;
+}
+
+/* Function to calculate the distance between two latitudes and two longitudes 
 */
 double calc_distance_cities(std::shared_ptr<City> &city1, std::shared_ptr<City> &city2) {
-	double lat1_rad, lon1_rad, lat2_rad, lon2_rad, x, y;
-	lat1_rad = degree_to_radian(city1->getLatitude());
-	lon1_rad = degree_to_radian(city1->getLongitude());
-	lat2_rad = degree_to_radian(city2->getLatitude());
-	lon2_rad = degree_to_radian(city2->getLongitude());
-	x = sin((lat2_rad - lat1_rad) / 2);
-	y = sin((lon2_rad - lon1_rad) / 2);
-	return 2.0 * EARTH_RADIUS_KM * asin(sqrt(x * x + cos(lat1_rad) * cos(lat2_rad) * y * y));
+	return calcDistance(city1->getLatitude(), city1->getLongitude(), city2->getLatitude(), city2->getLongitude());
 }
 
-/* Same as above, but accepts coords of one City directly */
-double calc_distance_cities(double latitude, double longitude, std::shared_ptr<City> &target_city) {
-	double lat1_rad, lon1_rad, lat2_rad, lon2_rad, x, y;
-	lat1_rad = degree_to_radian(latitude);
-	lon1_rad = degree_to_radian(longitude);
-	lat2_rad = degree_to_radian(target_city->getLatitude());
-	lon2_rad = degree_to_radian(target_city->getLongitude());
-	x = sin((lat2_rad - lat1_rad) / 2);
-	y = sin((lon2_rad - lon1_rad) / 2);
-	return 2.0 * EARTH_RADIUS_KM * asin(sqrt(x * x + cos(lat1_rad) * cos(lat2_rad) * y * y));
+/* Same as above, but accepts a City object to get its coords */
+double calc_distance_cities(std::shared_ptr<Coordinate> &coord1, std::shared_ptr<City> &target_city) {
+	return calcDistance(coord1->getLatitude(), coord1->getLongitude(), target_city->getLatitude(), target_city->getLongitude());
 }
 
-/* Function to check if a string is comprised of only alphabets
-*/
+/* Function to check if a string is comprised of only alphabets */
 bool isAlphaString(std::string str) {
 	return std::regex_match(str, std::regex("^[A-Za-z ]+$"));
 }

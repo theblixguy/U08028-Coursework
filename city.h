@@ -1,5 +1,5 @@
 /* 
-* City.h
+* city.h
 * Contains definitions for the City class and getter functions
 *
 * Written by: Suyash Srijan
@@ -10,27 +10,29 @@
 #ifndef CITY_H
 #define CITY_H
 #include <string>
+#include "coordinate.h"
+#include <memory>
 
-/* Simplify unique_ptr decl */
+/* Simplify shared_ptr decl */
 template <typename T>
 using SPtr = typename std::shared_ptr<T>;
  
 class City
 {
 private:
-    double city_longitude;
-    double city_latitude;
+    SPtr<Coordinate> city_coords;
     std::string city_name;
     std::string city_country;
  
 public:
-    City(double latitude, double longitude, std::string city, std::string country);
- 
-    void setCity(double latitude, double longitude, std::string city, std::string country);
+    City(double latitude, double longitude, std::string const& city, std::string const& country);
+    void setCity(double latitude, double longitude, std::string const& city, std::string const& country);
+    void setCityCoords(double lat, double lon);
+    void setCityAndCountry(std::string const& city, std::string const& country);
     double getDistanceTo(SPtr<City> &target_city);
- 
-    double getLatitude() { return city_latitude; }
-    double getLongitude() { return city_longitude; }
+    Coordinate *getCityCoords() { return city_coords.get(); }
+    double getLatitude() { return city_coords->getLatitude(); }
+    double getLongitude() { return city_coords->getLongitude(); }
     std::string getCity() { return city_name; }
     std::string getCityCountry() { return city_country; }
 };

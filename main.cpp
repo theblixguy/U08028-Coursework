@@ -1,5 +1,5 @@
 /*
-*
+* main.cpp
 * Cities program (U08028 Coursework)
 * Written by: Suyash Srijan
 * Student number: 14076594
@@ -8,7 +8,7 @@
 * so please don't forget to add -std=c++14 to g++ when compiling!
 * 
 * To enable printing of performance stats (i.e time taken to sort & save/load cities data), add 
-* -D PRINT_PERF_STATS to g++ or add $(PERF_STAT_FLAG) to main.o target in makefile!
+* -D PRINT_STATS to g++ or add $(PRINT_STATS) to main.o target in makefile!
 *
 */
 
@@ -23,11 +23,12 @@
 #include <iomanip>
 #include "simple_vector.h"
 #include "city.h"
+#include "coordinate.h"
 #include "utils.h"
 
 /* Macros to store the date/time to show the compilation date/time in program */
-#define build_time __TIME__
-#define build_date __DATE__
+#define BUILD_TIME __TIME__
+#define BUILD_DATE __DATE__
 
 /* Macros to store ANSI escape codes for text customization */
 #define CLR_NORMAL  "\x1B[0m"
@@ -39,11 +40,37 @@
 #define BOLD_ON     "\x1B[1m"
 #define BOLD_OFF    "\x1B[21m"
 
-/* Throw error if on Windows as there's some changes that need to be done to properly support it. 
-* TODO: There are some minor changes that needs to be made in utils.cpp to support compiling on Win32
+/* Define some compiler specific macros to detect whether the program was compiled using GCC, Clang,
+* Microsoft Visual C++ or an unknown compiler
 */
-#ifdef _WIN32
-#error Sorry, you cannot compile this program on Windows (yet)
+#if defined(__clang__)
+    #define COMPILER_NAME "Clang"
+    #define COMPILER_MAJOR_VER __clang_major__
+    #define COMPILER_MINOR_VER __clang_minor__
+    #define COMPILER_PATCH_LVL __clang_patchlevel__
+/* Clang/LLVM defines __GNUC__ and __GNUG__ for compatibility so check for !defined(__clang__)
+* to properly detect GCC
+*/
+#elif defined((__GNUC__) || defined(__GNUG__)) && !defined(__clang__)
+    #define COMPILER_NAME "GCC"
+    #define COMPILER_MAJOR_VER __GNUC__
+    #define COMPILER_MINOR_VER __GNUC_MINOR__
+    #define COMPILER_PATCH_LVL __GNUC_PATCHLEVEL__
+#elif defined(_MSC_VER)
+    #define COMPILER_NAME "MSVC"
+    #define COMPILER_MAJOR_VER 0
+    #define COMPILER_MINOR_VER 0
+    #define COMPILER_PATCH_LVL 0
+#else
+    #define COMPILER_NAME "UNKNOWN"
+    #define COMPILER_MAJOR_VER 0
+    #define COMPILER_MINOR_VER 0
+    #define COMPILER_PATCH_LVL 0
+#endif
+
+/* Throw error if compiler isn't atleast C++14 compliant as this program uses some C++ 14 (and 11) features */
+#if __cplusplus < 201402L
+    #error You need a C++ 14 compliant compiler to compile this program
 #endif
 
 /* Simplify shared_ptr declaration */
@@ -69,9 +96,9 @@ void saveCitiesData();
 int getProgramMenuChoice();
 auto cityExists();
 
-/* Duh */
+/* Entry point */
 int main() {
-#ifdef PRINT_PERF_STATS
+#ifdef PRINT_STATS
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     loadCitiesData();
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
@@ -80,7 +107,6 @@ int main() {
 #else
     loadCitiesData();
 #endif
-
     printProgramIntro();
     printProgramMenu();
     handleMenuChoice();
@@ -91,7 +117,7 @@ int main() {
 void printProgramIntro() {
     std::cout << CLR_CYAN << "------------------------------------------------------------" << std::endl;
     std::cout << BOLD_ON << "Cities program (U08028 Coursework) by Suyash Srijan" << std::endl;
-    std::cout << "Compiled on: " << build_date << " / " << build_time << BOLD_OFF << std::endl;
+    std::cout << "Compiled on: " << BUILD_DATE << " / " << BUILD_TIME << " using " << COMPILER_NAME << " " << COMPILER_MAJOR_VER << "." << COMPILER_MINOR_VER << "." << COMPILER_PATCH_LVL << BOLD_OFF << std::endl;
     std::cout << "------------------------------------------------------------" << CLR_NORMAL << std::endl;
 }
 
@@ -111,7 +137,7 @@ int getProgramMenuChoice() {
 /* Function to sort our vector in ascending order (A-Z) */
 void sortCities() {
 
-#ifdef PRINT_PERF_STATS
+#ifdef PRINT_STATS
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     std::sort(cities.begin(), cities.end(), [](const SPtr<City>& city1, const SPtr<City>& city2) {
         return city1->getCity() < city2->getCity(); 
@@ -154,7 +180,6 @@ void saveCitiesData() {
     std::ofstream data_file("cities_data.txt");
 
     if (cities.empty()) return;
-
     sortCities();
 
     for (auto&& item : cities) {
@@ -163,6 +188,14 @@ void saveCitiesData() {
     }
 
     data_file.close();
+}
+
+/* Function that finds a city and returns an iterator to it, If no such city is found, then the function returns cities.end() */
+auto cityExists(std::string const& city, std::string const& country) {
+    auto it = std::find_if(cities.begin(), cities.end(), [city, country](const SPtr<City>& city1) {
+        return (caseInsensitiveCompare(city1->getCity(), city)) && (caseInsensitiveCompare(city1->getCityCountry(), country)); 
+    });
+    return it;
 }
 
 /* Function that reads the city name and coordinates from standard input and creates a new City shared_ptr in our vector */
@@ -190,6 +223,11 @@ void addCity() {
         std::getline(std::cin, city_country);
     }
 
+    auto city = cityExists(city_name, city_country);
+
+    if (city != cities.end()) {
+    std::cout << CLR_RED << "City already exists!" << CLR_NORMAL << std::endl;
+    } else {
     std::cout << "Enter the latitude of the city: " << std::endl;
     std::cin >> latitude;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -198,16 +236,10 @@ void addCity() {
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     cities.push_back(std::make_shared<City>(latitude, longitude, city_name, city_country));
     std::cout << CLR_GREEN << "City added!" << CLR_NORMAL << std::endl;
+    }
 
     printProgramMenu();
     handleMenuChoice();
-}
-
-/* Function that finds a city and returns an iterator to it, If no such city is found, then the function returns cities.end() */
-auto cityExists(std::string city, std::string country) {
-    auto it = std::find_if(cities.begin(), cities.end(), [city, country](const SPtr<City>& city1)
-    { return (city1->getCity().compare(city) == 0) && (city1->getCityCountry().compare(country) == 0); });
-    return it;
 }
 
 /* Function that reads the city name from standard input and lets the user change its coordinates if the city exists in our vector
@@ -216,6 +248,8 @@ auto cityExists(std::string city, std::string country) {
 void modifyCity() {
     std::string city_name;
     std::string city_country;
+    std::string new_city_name;
+    std:;string new_country_name;
     double latitude;
     double longitude;
 
@@ -237,17 +271,23 @@ void modifyCity() {
         std::getline(std::cin, city_country);
     }
 
-    std::cout << "Enter the new latitude of the city: " << std::endl;
-    std::cin >> latitude;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cout << "Enter the new longitude of the city: " << std::endl;
-    std::cin >> longitude;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
     auto city = cityExists(city_name, city_country);
-    
+
     if (city != cities.end()) {
-        (*city)->setCity(latitude, longitude, city_name, city_country);
+        std::cout << "Enter the new name of the city: " << std::endl;
+        std::cin >> new_city_name;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Enter the new name of the country: " << std::endl;
+        std::cin >> new_country_name;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Enter the new latitude of the city: " << std::endl;
+        std::cin >> latitude;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Enter the new longitude of the city: " << std::endl;
+        std::cin >> longitude;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        (*city)->setCityCoords(latitude, longitude);
+        (*city)->setCityAndCountry(new_city_name, new_country_name);
         std::cout << CLR_GREEN << "City modified!" << CLR_NORMAL << std::endl;
     } else {
         std::cout << CLR_RED << "City not found!" << CLR_NORMAL << std::endl;
@@ -300,6 +340,10 @@ void deleteCity() {
 void displayAllCities() {
     sortCities();
 
+    #ifdef PRINT_STATS
+        std::cout << CLR_MAGENTA << "Info: Program is using " << sizeof(SimpleVector<SPtr<City>>) + (sizeof(SPtr<City>) * cities.size()) << " bytes to store " << cities.size() << " items" << CLR_NORMAL << std::endl;
+    #endif
+
     std::cout << "Name                    Country                    Latitude          Longitude" << std::endl;
     std::cout << "-------------------------------------------------------------------------------" << std::endl;
 
@@ -316,8 +360,7 @@ void displayAllCities() {
 }
 
 /* Function that finds the distance in kilometers between two Cities 
-*  TODO: Add error handling while reading double values
-*  TODO: Fix bug where having a space in the city name causes program to reject input
+*  TODO: Fix bug where having a space in the city name causes program to reject input **FIXED**
 */
 void findDistCities() {
     std::string city_1;
@@ -366,7 +409,7 @@ void findDistCities() {
 
     if (city1 != cities.end() && city2 != cities.end()) {
         double dist = (*city1)->getDistanceTo(*city2);
-        std::cout << CLR_GREEN << "Distance between the cities: " << dist << " kilometers" << CLR_NORMAL << std::endl;
+        std::cout << CLR_GREEN << "Distance between the cities: " << std::fixed << dist << " kilometers" << CLR_NORMAL << std::endl;
     } else {
         std::cout << CLR_RED << "One of the cities you entered was not found!" << CLR_NORMAL << std::endl;
     }
@@ -380,7 +423,7 @@ void findDistCities() {
 */
 void exitProgram() {
 
-#ifdef PRINT_PERF_STATS
+#ifdef PRINT_STATS
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     saveCitiesData();
     std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
