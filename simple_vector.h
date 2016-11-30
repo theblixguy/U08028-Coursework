@@ -17,6 +17,7 @@
 
 /* Imports we need */
 #include <iostream>
+#include <limits>
 #include <cstddef>
 #include <stdexcept>
 

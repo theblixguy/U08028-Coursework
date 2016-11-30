@@ -19,6 +19,8 @@ double calcDistance(double latitutde1, double longitude1, double latitude2, doub
 double calc_distance_cities(std::shared_ptr<City> &city1, std::shared_ptr<City> &city2);
 double calc_distance_cities(std::shared_ptr<Coordinate> &coord1, std::shared_ptr<City> &city2);
 double clear_screen();
+bool IsRunningWin10TH2();
+void enableEscapeSequencesOnConsole();
 bool caseInsensitiveComparator(unsigned char ch1, unsigned char ch2);
 bool caseInsensitiveCompare(std::string const& str1, std::string const& str2);
 bool isAlphaString(std::string str);

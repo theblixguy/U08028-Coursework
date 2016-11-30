@@ -3,7 +3,7 @@
 # Written by: Suyash Srijan
 # Student number: 14076594
 
-CXX= clang++
+CXX= g++
 CXXFLAGS= -c -Wall -Wextra -Ofast -march=native -std=c++14
 PRINT_STAT_FLAG= -D PRINT_STATS
 
@@ -11,7 +11,7 @@ all: cities
 
 cities: main.o city.o coordinate.o utils.o
 	@echo	"Linking object files and generating executable..."
-	$(CXX) main.o city.o coordinate.o utils.o -o cities
+	$(CXX) main.o city.o coordinate.o utils.o -o cities.exe
 	@echo	"Done!"
 
 main.o: main.cpp simple_vector.h
@@ -38,5 +38,5 @@ utils.o: utils.cpp utils.h simple_vector.h
 
 clean:
 	@echo	"Removing old files..."
-	rm *o cities
+	del *o cities
 	@echo	"Done!"

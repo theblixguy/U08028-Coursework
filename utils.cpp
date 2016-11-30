@@ -15,8 +15,11 @@
 #include "city.h"
 #include "simple_vector.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 #include <windows.h>
+	#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+		#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+	#endif
 #endif
 
 /* Pi constant */
@@ -36,7 +39,7 @@ const double U_CONST = 0.99664718934; // 1 - FLATTENING
 * using std::system("cls"); for obvious reasons
 */
 void clear_screen() {
-	#if defined(_WIN32) || defined(_WIN64)
+	#ifdef _WIN32
 		HANDLE stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     	COORD coord = {0, 0};
     	DWORD count;
@@ -48,6 +51,46 @@ void clear_screen() {
 		std::cout << "\033[2J\033[1;1H";
     #endif
 }
+
+/* Overcomplicated function to determine if you're running on Windows 10 v1511 (Threshold 2), which is required to 
+* enable Virtual terminal sequences on Windows console. The reason why this function is being used is because 
+* GetVersionEx() is now deprecated and using the helper function IsWindows10OrGreater() from VersionHelpers.h 
+* requires a special manifest file for the program, otherwise it returns a different version number, which 
+* is more messy to write and add to makefile, so it's just simpler to read the releaseId from the Windows 
+* registery and check whether it's at least 1511, which means TH2, which has support for Virtual terminal 
+* equences.
+*/
+#ifdef _WIN32
+bool IsRunningWin10TH2() {
+    HKEY releaseIdKey;
+	int id;
+	DWORD valueType;
+    BYTE buffer[256];
+    DWORD bufferSize = 256;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion)", 0, KEY_QUERY_VALUE, &releaseIdKey) != ERROR_SUCCESS) return false;
+    if (RegQueryValueExW(releaseIdKey, L"ReleaseId", nullptr, &valueType, buffer, &bufferSize) != ERROR_SUCCESS) return false;
+    if (valueType != REG_SZ) return false;
+    std::wistringstream idStream(reinterpret_cast<wchar_t*>(buffer));
+    idStream >> id;
+	RegCloseKey(releaseIdKey);
+    return id >= 1511;
+}
+#endif
+
+/* Method to enable Virtual terminal sequences on Windows console using the Console API (requires at least TH2)*/
+#ifdef _WIN32
+void enableEscapeSequencesOnConsole() {
+		HANDLE stdOutHandle;
+		DWORD consoleMode;
+		stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+		consoleMode = ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+		SetConsoleMode(stdOutHandle, consoleMode);
+		consoleMode = 0;
+		if (!GetConsoleMode(stdOutHandle, &consoleMode)) {
+			std::cout << "Error enabling Virtual Terminal Processing" << std::endl;
+		}
+}
+#endif
 
 /* Comparator for the caseInsensitiveCompare() function */
 bool caseInsensitiveComparator(unsigned char ch1, unsigned char ch2) {
