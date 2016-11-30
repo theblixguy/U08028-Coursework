@@ -1,4 +1,4 @@
-/* 
+/*
 * utils.h
 * Contains definitions of helper functions for the Cities program
 *

@@ -6,7 +6,7 @@
 *
 * A simple implementation of a vector, based on the latest C++ container spec (draft)
 * which can be found at http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3797.pdf
-* 
+*
 * This container is not 100% standards compliant, is missing some features, and may not be as
 * optimized as std::vector but is functional enough for our program's needs.
 *
@@ -21,73 +21,73 @@
 #include <cstddef>
 #include <stdexcept>
 
-/* Memory resize multiplier 
+/* Memory resize multiplier
 *
 * Controls the growth rate of the vector's capacity
 *
-* 1.5 provides a good balance between speed and space while still making sure push_back's are amortized O(1). 
-* Some implementations use 2 but it's up to whether you want to prioritize performance or memory usage. Having 
-* a much lower resize multiplier (say 1.2) would actually result in substantial decrease in performance (due 
-* to constant reallocations) and having a much higher resize multiplier (say 3) would result in substantial 
+* 1.5 provides a good balance between speed and space while still making sure push_back's are amortized O(1).
+* Some implementations use 2 but it's up to whether you want to prioritize performance or memory usage. Having
+* a much lower resize multiplier (say 1.2) would actually result in substantial decrease in performance (due
+* to constant reallocations) and having a much higher resize multiplier (say 3) would result in substantial
 * increase in memory usage and caching issues while providing little to no performance improvements.
-* 
+*
 */
 #define RESIZE_MULTIPLIER 1.5
 
 /* SimpleVector */
 template<class T> class SimpleVector {
-  public:
+public:
 
-    typedef T* iterator;
-    typedef const T* const_iterator;
-    typedef T value_type;
-    typedef size_t size_type;
+  typedef T* iterator;
+  typedef const T* const_iterator;
+  typedef T value_type;
+  typedef size_t size_type;
 
-    T& operator[] (size_type idx);
-    const T& operator[] (size_type idx) const;
-    SimpleVector& operator= (SimpleVector vec) noexcept;
+  T& operator[] (size_type idx);
+  const T& operator[] (size_type idx) const;
+  SimpleVector& operator= (SimpleVector vec) noexcept;
 
-    T& at(size_type idx);
-    const T& at(size_type idx) const;
-    void clear();
-    value_type* data() noexcept;
-    const value_type* data() const noexcept;
-    bool empty() const;
-    size_type size() const;
-    void push_back(const T& item);
-    void pop_back();
-    void resize(size_type sz);
-    void resize(size_type sz, const value_type& obj);
-    void reserve(size_type sz);
+  T& at(size_type idx);
+  const T& at(size_type idx) const;
+  void clear();
+  value_type* data() noexcept;
+  const value_type* data() const noexcept;
+  bool empty() const;
+  size_type size() const;
+  void push_back(const T& item);
+  void pop_back();
+  void resize(size_type sz);
+  void resize(size_type sz, const value_type& obj);
+  void reserve(size_type sz);
 
-    iterator begin() noexcept;
-    iterator end() noexcept;
-    iterator back();
-    const_iterator begin() const noexcept;
-    const_iterator end() const noexcept;
-    const_iterator back() const;
+  iterator begin() noexcept;
+  iterator end() noexcept;
+  iterator back();
+  const_iterator begin() const noexcept;
+  const_iterator end() const noexcept;
+  const_iterator back() const;
 
-    SimpleVector(size_type sz, const value_type& obj = T());
-    SimpleVector(const SimpleVector& vec);
-    SimpleVector(SimpleVector&& vec);
+  SimpleVector(size_type sz, const value_type& obj = T());
+  SimpleVector(const SimpleVector& vec);
+  SimpleVector(SimpleVector&& vec);
 
-    SimpleVector();
-    ~SimpleVector();
+  SimpleVector();
+  ~SimpleVector();
 
-    friend void swap(SimpleVector& first, SimpleVector& second) {
-      std::swap(first.container_size, second.container_size);
-      std::swap(first.container_capacity, second.container_capacity);
-      std::swap(first.data_chunk, second.data_chunk);
-    }
+  friend void swap(SimpleVector& first, SimpleVector& second) {
+    std::swap(first.container_size, second.container_size);
+    std::swap(first.container_capacity, second.container_capacity);
+    std::swap(first.data_chunk, second.data_chunk);
+  }
 
-  private:
-    size_type container_size;
-    size_type container_capacity;
-    std::allocator<T> mem_allocator;
-    T* data_chunk;
+private:
+  size_type container_size;
+  size_type container_capacity;
+  std::allocator<T> mem_allocator;
+  T* data_chunk;
 
-    void make_container_smaller(size_type sz);
-    void make_container_bigger(size_type sz);
+  void make_container_smaller(size_type sz);
+  void make_container_bigger(size_type sz);
 };
 
 /* Constructor */
@@ -243,7 +243,7 @@ void SimpleVector<T>::resize(size_type sz) {
   container_size = sz;
 }
 
-/* Same as above except you can pass obj to the copy constructor's argument */ 
+/* Same as above except you can pass obj to the copy constructor's argument */
 template<class T>
 void SimpleVector<T>::resize(size_type sz, const value_type& obj) {
   if (container_size == sz) return;
@@ -262,7 +262,7 @@ void SimpleVector<T>::resize(size_type sz, const value_type& obj) {
 }
 
 /* Reserve storage for the container
-* 
+*
 *  Allocate more storage to the container but leave it uninitialized. Copy data from the
 *  old data_chunk to the new one
 */
@@ -282,7 +282,7 @@ void SimpleVector<T>::reserve(size_type sz) {
     mem_allocator.construct(data_chunk + i, prev_data[i]);
   }
 
-  for (size_type i=0; i < container_size; i++) {
+  for (size_type i = 0; i < container_size; i++) {
     mem_allocator.destroy(prev_data + i);
   }
 

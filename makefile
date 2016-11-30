@@ -11,7 +11,11 @@ all: cities
 
 cities: main.o city.o coordinate.o utils.o
 	@echo	"Linking object files and generating executable..."
+ifeq ($(OS), Windows_NT)
 	$(CXX) main.o city.o coordinate.o utils.o -o cities.exe
+else
+	$(CXX) main.o city.o coordinate.o utils.o -o cities
+endif
 	@echo	"Done!"
 
 main.o: main.cpp simple_vector.h
@@ -38,5 +42,9 @@ utils.o: utils.cpp utils.h simple_vector.h
 
 clean:
 	@echo	"Removing old files..."
-	del *o cities
+ifeq ($(OS), Windows_NT)
+	del *o cities.exe
+else
+	rm *o cities
+endif
 	@echo	"Done!"
