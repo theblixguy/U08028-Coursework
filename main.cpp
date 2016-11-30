@@ -7,8 +7,9 @@
 * This code uses some C++ 11 and C++ 14 features like auto, std::make_shared, std::function, and lambdas
 * so please don't forget to add -std=c++14 to g++ when compiling!
 *
-* To enable printing of performance stats (i.e time taken to sort & save/load cities data), add
-* -D PRINT_STATS to g++ or add $(PRINT_STATS) to main.o target in makefile!
+* To enable printing of performance stats (i.e time taken to sort cities, save/load cities data and memory 
+* consumption of elements stored in the vector), add -D PRINT_STATS to g++ or add $(PRINT_STAT_FLAG) 
+* to main.o target in makefile!
 *
 */
 
@@ -489,12 +490,12 @@ void displayAllCities() {
 #ifdef PRINT_STATS
 #ifdef _WIN32
     if (isRunningWin10Th2) {
-        std::cout << CLR_MAGENTA << "Info: Program is using " << sizeof(SimpleVector<SPtr<City>>) + (sizeof(SPtr<City>) * cities.size()) << " bytes to store " << cities.size() << " items" << CLR_NORMAL << std::endl;
+        std::cout << CLR_MAGENTA << "Info: Program is using " << (sizeof(cities[0]) * cities.size()) << " bytes to store " << cities.size() << " items" << CLR_NORMAL << std::endl;
     } else {
-        std::cout << "Info: Program is using " << sizeof(SimpleVector<SPtr<City>>) + (sizeof(SPtr<City>) * cities.size()) << " bytes to store " << cities.size() << " items" << std::endl;
+        std::cout << "Info: Program is using " << (sizeof(cities[0]) * cities.size()) << " bytes to store " << cities.size() << " items" << std::endl;
     }
 #else
-    std::cout << CLR_MAGENTA << "Info: Program is using " << sizeof(SimpleVector<SPtr<City>>) + (sizeof(SPtr<City>) * cities.size()) << " bytes to store " << cities.size() << " items" << CLR_NORMAL << std::endl;
+    std::cout << CLR_MAGENTA << "Info: Program is using " << (sizeof(cities[0]) * cities.size()) << " bytes to store " << cities.size() << " items" << CLR_NORMAL << std::endl;
 #endif
 #endif
 

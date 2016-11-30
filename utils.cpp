@@ -57,8 +57,8 @@ void clear_screen() {
 * GetVersionEx() is now deprecated and using the helper function IsWindows10OrGreater() from VersionHelpers.h
 * requires a special manifest file for the program, otherwise it returns a different version number, which
 * is more messy to write and add to makefile, so it's just simpler to read the releaseId from the Windows
-* registery and check whether it's at least 1511, which means TH2, which has support for Virtual terminal
-* equences.
+* registry and check whether it's at least 1511, which means TH2, which has support for Virtual terminal
+* sequences.
 */
 #ifdef _WIN32
 bool IsRunningWin10TH2() {
